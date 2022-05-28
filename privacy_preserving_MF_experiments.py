@@ -47,7 +47,7 @@ predictions_additive_n_2_laplacian = {}
 print("Baseline")
 start = time.time()
 for factors in latent_vector_sizes:
-    svd_run = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+    svd_run = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                   shuffle=False, min_rating=1, max_rating=5)
     svd_run.fit(X=train, X_val=train)
     pred2 = svd_run.predict(test)
@@ -68,7 +68,7 @@ for factors in latent_vector_sizes:
         noise = np.random.laplace(loc=0, scale=sensitivity / epsilon, size=train.shape[0])
         base = train.copy(deep=True)
         base.rating = base.rating + noise
-        svd_run = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd_run = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                       shuffle=False, min_rating=1, max_rating=5)
         svd_run.fit(X=base, X_val=base)
         pred2 = svd_run.predict(test)
@@ -92,14 +92,14 @@ for factors in latent_vector_sizes:
         base_1.rating = base_1.rating + noise_1
         base_2 = train.copy(deep=True)
         base_2.rating = base_2.rating + noise_2
-        svd1 = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd1 = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                    shuffle=False, min_rating=1, max_rating=5)
 
-        svd2 = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd2 = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                    shuffle=False, min_rating=1, max_rating=5)
         svd1.fit(X=base_1, X_val=base_1)
         svd2.fit(X=base_2, X_val=base_2)
-        svd_real_deal = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd_real_deal = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                             shuffle=False, min_rating=1, max_rating=5)
 
         svd_real_deal.bi_ = (svd1.bi_ + svd2.bi_) / 2
@@ -130,14 +130,14 @@ for factors in latent_vector_sizes:
         base_1.rating = base_1.rating + noise_1
         base_2 = train.copy(deep=True)
         base_2.rating = base_2.rating - noise_2
-        svd1 = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd1 = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                    shuffle=False, min_rating=1, max_rating=5)
 
-        svd2 = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd2 = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                    shuffle=False, min_rating=1, max_rating=5)
         svd1.fit(X=base_1, X_val=base_1)
         svd2.fit(X=base_2, X_val=base_2)
-        svd_real_deal = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd_real_deal = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                             shuffle=False, min_rating=1, max_rating=5)
         svd_real_deal.bi_ = (svd1.bi_ + svd2.bi_) / 2
         svd_real_deal.bu_ = (svd1.bu_ + svd2.bu_) / 2
@@ -166,13 +166,13 @@ for factors in latent_vector_sizes:
         base_1.rating = noise
         base_2 = train.copy(deep=True)
         base_2.rating = base_2.rating - noise
-        svd1 = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd1 = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                    shuffle=False, min_rating=1, max_rating=5)
-        svd2 = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd2 = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                    shuffle=False, min_rating=1, max_rating=5)
         svd1.fit(X=base_1, X_val=base_1)
         svd2.fit(X=base_2, X_val=base_2)
-        svd_real_deal = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd_real_deal = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                             shuffle=False, min_rating=1, max_rating=5)
         svd_real_deal.bi_ = svd1.bi_ + svd2.bi_
         svd_real_deal.bu_ = svd1.bu_ + svd2.bu_
@@ -201,13 +201,13 @@ for factors in latent_vector_sizes:
         base_1.rating = base_1.rating / 2 + noise
         base_2 = train.copy(deep=True)
         base_2.rating = base_2.rating / 2 - noise
-        svd1 = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd1 = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                    shuffle=False, min_rating=1, max_rating=5)
-        svd2 = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd2 = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                    shuffle=False, min_rating=1, max_rating=5)
         svd1.fit(X=base_1, X_val=base_1)
         svd2.fit(X=base_2, X_val=base_2)
-        svd_real_deal = SVD(lr=0.001, reg=0.005, n_epochs=1000, n_factors=factors, early_stopping=True,
+        svd_real_deal = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factors, early_stopping=True,
                             shuffle=False, min_rating=1, max_rating=5)
         svd_real_deal.bi_ = svd1.bi_ + svd2.bi_
         svd_real_deal.bu_ = svd1.bu_ + svd2.bu_
@@ -243,3 +243,4 @@ pickle.dump(predictions_plus_minus_of_two_laplacian, handle, protocol=pickle.HIG
 pickle.dump(predictions_additive_n_r_laplacian, handle, protocol=pickle.HIGHEST_PROTOCOL)
 pickle.dump(predictions_additive_n_2_laplacian, handle, protocol=pickle.HIGHEST_PROTOCOL)
 handle.close()
+

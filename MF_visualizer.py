@@ -1,11 +1,24 @@
 import pickle
-
 from funk_svd.dataset import fetch_ml_ratings
 from matplotlib import pyplot as plt
 import numpy as np
-
-# latent_vector_sizes = [5, 15, 30, 50, 100, 200]
+from matplotlib.lines import Line2D
 from sklearn.model_selection import train_test_split
+import matplotlib.patches as mpatches
+
+SMALL_SIZE = 10
+linewidth_custom = 1
+LEGEND_SCALE = 2
+# MEDIUM_SIZE = 10
+# BIGGER_SIZE = 12
+
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=SMALL_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=SMALL_SIZE)
 
 df = fetch_ml_ratings(variant='100k')
 
@@ -13,7 +26,12 @@ train, test = train_test_split(df, test_size=0.2, random_state=42)
 
 latent_vector_sizes = [3, 5, 10, 15, 30, 50, 100]
 noise_range = [1, 2, 3, 5, 10, 30, 100]
-epsilons = [0.1, 0.3, 0.5, 0.7, 1, 1.5, 2, 3]
+epsilons = [0.1, 0.5, 1, 3]
+
+colors = ["tab:blue", "tab:orange","tab:green","tab:red","tab:purple"]
+line_styles = [ "dashdot", "dotted", "dashed","solid"]
+
+# epsilons = [0.1, 0.3, 0.5, 0.7, 1, 1.5, 2, 3]
 
 handle = open('results_mae.pickle', 'rb')
 results_baseline = pickle.load(handle)
@@ -33,73 +51,144 @@ predictions_additive_n_r_laplacian = pickle.load(handle)
 predictions_additive_n_2_laplacian = pickle.load(handle)
 handle.close()
 
-plt.figure(figsize=(15, 15), dpi=80)
-plt.xlabel('Latent Vector Size')
-plt.title('Increasing the Redundancy')
+plt.xlabel('Latent Factor Dimension')
+plt.title('Effect of Increasing the Redundancy')
 plt.ylabel('MAE')
 plt.xticks(latent_vector_sizes)
 
 for epsilon in epsilons:
-    plt.plot(latent_vector_sizes, results_base_noise_laplacian[epsilon], linewidth=1, marker =".", label= "Base and noise: {:.1f}".format(epsilon))
-    plt.plot(latent_vector_sizes, results_average_of_two_laplacian[epsilon], linewidth=1, marker =".", label= "Average of two and noise: {:.1f}".format(epsilon))
-    # plt.plot(latent_vector_sizes, results_plus_minus_of_two_laplacian[epsilon], linewidth=1, marker =".", label= "Plus minus trick noise: {:.1f}".format(epsilon))
+    color_index = epsilons.index(epsilon)
+    col = colors[color_index]
+    plt.plot(latent_vector_sizes, results_base_noise_laplacian[epsilon], linewidth=linewidth_custom, color=col , linestyle = line_styles[0], label= "Single party, \u03B5: {:.1f}".format(epsilon))
+    plt.plot(latent_vector_sizes, results_average_of_two_laplacian[epsilon], linewidth=linewidth_custom, color=col ,linestyle = line_styles[1], label= "Two parties, \u03B5 {:.1f}".format(epsilon))
+    # plt.plot(latent_vector_sizes, results_plus_minus_of_two_laplacian[epsilon], linewidth=1, label= "Two parties, opposite sign noise with \u03B5 {:.1f}".format(epsilon))
     # plt.plot(latent_vector_sizes, results_additive_n_r_laplacian[epsilon], linewidth=1, marker ="v", label= "(noise, r-noise): {:.1f}".format(epsilon))
-    # plt.plot(latent_vector_sizes, results_additive_n_2_laplacian[epsilon], linewidth=1, marker ="s", label= "(r/2 + noise, r/2 - noise): {:.1f}".format(epsilon))
-plt.plot(  latent_vector_sizes, results_baseline, linewidth=1, marker =".", label= 'no noise')
+    # plt.plot(latent_vector_sizes, results_additive_n_2_laplacian[epsilon], linewidth=1, label= "(r/2 + noise, r/2 - noise): {:.1f}".format(epsilon))
+plt.plot(  latent_vector_sizes, results_baseline, linewidth=linewidth_custom,color=colors[4], linestyle = line_styles[3],label= 'Without noise')
 
-#
-# show legend
+lines = [Line2D([0], [0], color=colors[epsilons.index(eps)]) for eps in epsilons]
+lines.append(Line2D([0], [0], color='black', linestyle = line_styles[0]))
+lines.append(Line2D([0], [0], color='black', linestyle = line_styles[1]))
+lines.append(Line2D([0], [0], color=colors[4], linestyle = line_styles[3]))
+
+labels = ["\u03B5: {:.1f}".format(eps) for eps in epsilons]
+labels.append("Single party")
+labels.append("Two parties")
+labels.append("Without noise")
+plt.legend(lines, labels, prop={'size': SMALL_SIZE-LEGEND_SCALE}, loc='lower right')
 plt.ylim(0, 2.1)
-
-plt.legend()
-
-# show graph
+plt.savefig("img/redundancy1.png")
 plt.show()
 
-plt.figure(figsize=(15, 15), dpi=150)
-plt.xlabel('Epsilons',fontsize=18)
+
+
+
+
+plt.xlabel('Latent Factor Dimension')
+plt.title('Effect of Increasing the Redundancy: Noise with Opposite Signs')
+plt.ylabel('MAE')
+plt.xticks(latent_vector_sizes)
+
+for epsilon in epsilons:
+    color_index = epsilons.index(epsilon)
+    col = colors[color_index]
+    # plt.plot(latent_vector_sizes, results_base_noise_laplacian[epsilon], linewidth=1, label= "Single party, \u03B5 {:.1f}".format(epsilon))
+    plt.plot(latent_vector_sizes, results_average_of_two_laplacian[epsilon], linewidth=1,color=col , linestyle = line_styles[0],label= "Two parties, \u03B5: {:.1f}".format(epsilon))
+    plt.plot(latent_vector_sizes, results_plus_minus_of_two_laplacian[epsilon], linewidth=1, color=col , linestyle = line_styles[1],label= "Two parties, opposite sign noise, \u03B5 {:.1f}".format(epsilon))
+    # plt.plot(latent_vector_sizes, results_additive_n_r_laplacian[epsilon], linewidth=1, marker ="v", label= "(noise, r-noise): {:.1f}".format(epsilon))
+    # plt.plot(latent_vector_sizes, results_additive_n_2_laplacian[epsilon], linewidth=1, label= "(r/2 + noise, r/2 - noise): {:.1f}".format(epsilon))
+plt.plot(  latent_vector_sizes, results_baseline, linewidth=1, color=colors[4], linestyle = line_styles[3], label= 'Without noise')
+
+lines = [Line2D([0], [0], color=colors[epsilons.index(eps)]) for eps in epsilons]
+lines.append(Line2D([0], [0], color='black', linestyle = line_styles[0]))
+lines.append(Line2D([0], [0], color='black', linestyle = line_styles[1]))
+lines.append(Line2D([0], [0], color=colors[4], linestyle = line_styles[3]))
+
+labels = ["\u03B5: {:.1f}".format(eps) for eps in epsilons]
+labels.append("Two parties")
+labels.append("Two parties, opposite sign noise")
+labels.append("Without noise")
+plt.legend(lines, labels, prop={'size': SMALL_SIZE-LEGEND_SCALE}, loc='lower right')
+plt.ylim(0, 2.1)
+plt.savefig("img/redundancy2.png")
+plt.show()
+
+
+plt.xlabel('Latent Factor Dimension')
+plt.title('Effect of Additive Separation')
+plt.ylabel('MAE')
+plt.xticks(latent_vector_sizes)
+
+for epsilon in epsilons:
+    color_index = epsilons.index(epsilon)
+    col = colors[color_index]
+    plt.plot(latent_vector_sizes, results_base_noise_laplacian[epsilon], linewidth=1,color=col  ,linestyle = line_styles[0], label= "Single party, \u03B5 {:.1f}".format(epsilon))
+    # plt.plot(latent_vector_sizes, results_average_of_two_laplacian[epsilon], linewidth=1, label= "Two parties, \u03B5 {:.1f}".format(epsilon))
+    # plt.plot(latent_vector_sizes, results_plus_minus_of_two_laplacian[epsilon], linewidth=1, label= "Two parties, opposite sign noise with \u03B5 {:.1f}".format(epsilon))
+    # plt.plot(latent_vector_sizes, results_additive_n_r_laplacian[epsilon], linewidth=1, marker ="v", label= "(noise, r-noise): {:.1f}".format(epsilon))
+    plt.plot(latent_vector_sizes, results_additive_n_2_laplacian[epsilon], linewidth=1,color=col ,linestyle = line_styles[1], label= "Additive separation, \u03B5 {:.1f}".format(epsilon))
+plt.plot(  latent_vector_sizes, results_baseline, linewidth=1, color=colors[4], linestyle = line_styles[3],label= 'Without noise')
+
+
+lines = [Line2D([0], [0], color=colors[epsilons.index(eps)]) for eps in epsilons]
+lines.append(Line2D([0], [0], color='black', linestyle = line_styles[0]))
+lines.append(Line2D([0], [0], color='black', linestyle = line_styles[1]))
+lines.append(Line2D([0], [0], color=colors[4], linestyle = line_styles[3]))
+
+labels = ["\u03B5: {:.1f}".format(eps) for eps in epsilons]
+labels.append("Single party")
+labels.append("Additive separation")
+labels.append("Without noise")
+plt.legend(lines, labels, prop={'size': SMALL_SIZE-LEGEND_SCALE}, loc='lower right')
+plt.ylim(0, 2.1)
+plt.savefig("img/additive.png")
+plt.show()
+
+latent_vector_sizes = [3, 5, 10, 15, 30, 50, 100]
+noise_range = [1, 2, 3, 5, 10, 30, 100]
+epsilons = [0.1, 0.3, 0.5, 0.7, 1, 1.5, 2, 3]
+
+plt.xlabel('\u03B5')
 bar_chart_factor = 2
-
 plt.title('Errors with Latent Vector Size: {}'.format(latent_vector_sizes[bar_chart_factor]))
-plt.ylabel('MAE',fontsize=18)
-
-
-
+plt.ylabel('MAE')
 ind = np.arange(len(epsilons))
 width = 0.1       # the width of the bars
-
 epsilon_strings = [str(epsilon) for epsilon in epsilons]
+plt.bar(ind-2*width, results_baseline[bar_chart_factor], label= "Without noise", width=width)
+plt.bar(ind-width, [results_base_noise_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "Single party with noise", width=width)
+plt.bar(ind, [results_average_of_two_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "Increasing the redundancy", width=width)
+plt.bar(ind+width, [results_plus_minus_of_two_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "Increasing the redundancy, opposite signs", width=width)
+# plt.bar(ind+2*width, [results_additive_n_r_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "(noise, r-noise)", width=width)
+plt.bar(ind+2*width, [results_additive_n_2_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "Additive separation", width=width)
 
-plt.bar(ind-2*width, results_baseline[bar_chart_factor], label= "No noise", width=width)
-plt.bar(ind-width, [results_base_noise_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "Base and noise", width=width)
-plt.bar(ind, [results_average_of_two_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "Average of two", width=width)
-plt.bar(ind+width, [results_plus_minus_of_two_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "Plus minus trick", width=width)
-plt.bar(ind+2*width, [results_additive_n_r_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "(noise, r-noise)", width=width)
-plt.bar(ind+3*width, [results_additive_n_2_laplacian[epsilon][bar_chart_factor] for epsilon in epsilons], label= "(r/2 + noise, r/2 - noise)", width=width)
-
-
-plt.xticks(ind + width / 6, epsilon_strings)
-
-
-# show legend
+plt.xticks(ind + width / 5, epsilon_strings)
+# plt.yticks(np.linspace(0,2, 10))
+plt.tick_params(axis='y', which='minor', bottom=False)
+plt.grid(axis = 'y', linestyle = '--', linewidth = 0.5, alpha = 0.5)
+plt.minorticks_on()
 plt.ylim(0, 2.1)
+plt.legend(prop={'size': SMALL_SIZE-LEGEND_SCALE})
 
-plt.legend(prop={'size': 18})
-
-# show graph
+plt.savefig("img/comparison_all.png")
 plt.show()
 
-#
-# histogram_factor = 15
-# for epsilon in epsilons:
-#     bins = np.linspace(-1, 6, 100)
-#     plt.title("Epsilon {:.1f}".format(epsilon))
-#     plt.hist(predictions_baseline[histogram_factor], bins, alpha=0.5, label= "No noise")
-#     # plt.hist(predictions_base_noise_laplacian[(histogram_factor, epsilon)], bins, alpha=0.5, label= "Base and noise")
-#     # plt.hist(predictions_average_of_two_laplacian[(histogram_factor, epsilon)], bins, alpha=0.5, label= "Average of two")
-#     plt.hist(predictions_plus_minus_of_two_laplacian[(histogram_factor, epsilon)], bins, alpha=0.5, label= "Plus minus trick")
-#     # plt.hist(predictions_additive_n_r_laplacian[(histogram_factor, epsilon)], bins, alpha=0.5, label= "(noise, r-noise)")
-#     plt.hist(predictions_additive_n_2_laplacian[(histogram_factor, epsilon)], bins, alpha=0.5, label= "(r/2 + noise, r/2 - noise)")
-#     plt.hist(test['rating'], bins, alpha=0.5, label='real ratings')
-#     plt.legend(loc='upper right')
-#     plt.show()
+epsilons = [0.1, 0.5, 1, 3]
+
+histogram_factor = 10
+for epsilon in epsilons:
+    bins = np.linspace(1, 5, 100)
+    plt.title("Rating Histogram with \u03B5 {:.1f}".format(epsilon))
+    plt.xlabel('Rating Value')
+    plt.ylabel('Number of Ratings')
+    plt.hist(predictions_baseline[histogram_factor], bins,color="orange", alpha=0.9, label= "Without noise")
+    # plt.hist(predictions_base_noise_laplacian[(histogram_factor, epsilon)], bins, alpha=0.5, label= "Base and noise")
+    # plt.hist(predictions_average_of_two_laplacian[(histogram_factor, epsilon)], bins, alpha=0.5, label= "Average of two")
+    plt.hist(predictions_plus_minus_of_two_laplacian[(histogram_factor, epsilon)], bins, color="green", alpha=0.5, label= "Increasing the redundancy, opposite signs")
+    # plt.hist(predictions_additive_n_r_laplacian[(histogram_factor, epsilon)], bins, alpha=0.5, label= "(noise, r-noise)")
+    plt.hist(predictions_additive_n_2_laplacian[(histogram_factor, epsilon)], bins,color="red", alpha=0.5, label= "Additive separation")
+    plt.hist(test['rating'], bins, alpha=0.5, color="black", label='Actual Ratings')
+    plt.legend(loc='upper right')
+    plt.legend(prop={'size': SMALL_SIZE})
+    plt.savefig(f"img/histogram{epsilon}.png")
+    plt.show()
