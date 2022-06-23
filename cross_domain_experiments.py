@@ -1,10 +1,10 @@
 import pickle
 import random
 import time
+
 import numpy as np
 from funk_svd import SVD
 from funk_svd.dataset import fetch_ml_ratings
-from matplotlib import pyplot as plt
 from scipy import spatial
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
@@ -87,7 +87,6 @@ def predict(X, similarity_pre_calculation, user_ids, target_ratings, target_svd,
         for u_id, i_id in zip(X['u_id'], X['i_id'])
     ]
 
-
 def preprocess(overlap_percentage):
     random.seed(a=42)
     # df = fetch_ml_ratings(variant='1m')
@@ -103,9 +102,7 @@ def preprocess(overlap_percentage):
 
     # Initialize parameters
     number_or_users_per_domain = 450
-    # number_or_overlapping_users = 50
     number_or_overlapping_users = int(number_or_users_per_domain*overlap_percentage)
-
 
     # Sample a number of users for the source domain
     source_user_ids = random.sample(list(df.u_id.unique()), number_or_users_per_domain)
@@ -144,7 +141,6 @@ def preprocess(overlap_percentage):
     print(f"SOURCE: number of ratings: {source.shape[0]}, number of users {source.u_id.unique().size}, number of items {source.i_id.unique().size}")
     print(f"TARGET: number of ratings: {target.shape[0]}, number of users {target.u_id.unique().size}, number of items {target.i_id.unique().size}")
 
-
     sparsity_source = source.shape[0]/((source.i_id.unique().size)*(source.u_id.unique().size))
     sparsity_target = target.shape[0]/((target.i_id.unique().size)*(target.u_id.unique().size))
 
@@ -154,16 +150,7 @@ def preprocess(overlap_percentage):
 
     return source, target, overlapping_user_ids, overlapping_target, overlapping_source
 
-
-
-# source, target, overlapping_user_ids, overlapping_target, overlapping_source = preprocess(0.1)
-# print("Trainings starting")
-
-# latent_vector_sizes = [6]
-# user_overlap_percentages = [0.01, 0.05]
-#
 start_regular = time.time()
-
 latent_vector_sizes = [2, 4, 6, 10, 16, 30, 50, 100]
 user_overlap_percentages = [0.05, 0.1, 0.2, 0.3]
 maes= {}
@@ -173,7 +160,7 @@ for percentage in user_overlap_percentages:
     maes[percentage] = []
     rmses[percentage] = []
     for factor in latent_vector_sizes:
-        print(f"n_factors={factor*2}")
+        # print(f"n_factors={factor*2}")
         svd_source = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factor, early_stopping=True,
                       shuffle=False, min_rating=1, max_rating=5)
         svd_source.fit(X=source, X_val=source)
@@ -183,55 +170,36 @@ for percentage in user_overlap_percentages:
         svd_target.fit(X=target, X_val=target)
 
         # print("Trainings done, similarity calculation starting")
-
         intra_domain_similarity = intra_domain_similarity_calculation(svd_source, overlapping_user_ids)
         inter_domain_similarity = inter_domain_similarity_calculation(svd_source, svd_target, overlapping_user_ids)
-
         similarity_pre_calculation = similarity_per_new_user(inter_domain_similarity, intra_domain_similarity, overlapping_user_ids)
-        # print("Similarity done, average calculation starting")
 
+        # print("Similarity done, average calculation starting")
         source_averages = (source.groupby("u_id").mean("rating")).drop(labels="i_id", axis = 1).to_dict()['rating']
         target_averages = (target.groupby("u_id").mean("rating")).drop(labels="i_id", axis = 1).to_dict()['rating']
 
         # print("Averages done, prediction starting")
-
         start = time.time()
-
         results = predict(overlapping_target, similarity_pre_calculation, overlapping_user_ids, target, svd_target, target_averages, source_averages)
         end = time.time()
         print(f'Took {end - start:.1f} sec for test set size {overlapping_target.shape[0]}')
-
         # print(mean_absolute_error(overlapping_target['rating'], results))
-
         maes[percentage].append(mean_absolute_error(overlapping_target['rating'], results))
         rmses[percentage].append(mean_squared_error(overlapping_target['rating'], results, squared=False))
 #
 end_regular = time.time()
 print(f'All regular one took {end_regular - start_regular:.1f} sec')
-#
-
-# maes = {0.01: [0.6720392075025493, 0.7801594785191576, 0.80388675089687, 0.7060460925331351, 0.7558954132346772, 0.8209470103503858, 0.8744264984511406, 0.7085168666874456], 0.05: [0.8889802571003961, 0.8733522030560283, 0.8782903977516012, 0.8868310721180908, 0.8854371694543132, 0.8976322010243485, 0.884116404933818, 0.8721540359123712], 0.1: [0.8640090344313929, 0.8667535129518186, 0.8616961078122822, 0.8814080363434853, 0.8698145214562314, 0.8679051294523381, 0.8812504254293677, 0.8717898513019892], 0.2: [0.8356008361976319, 0.8284736064676025, 0.8286889657201497, 0.8308004416338397, 0.8445789033180653, 0.840168719535787, 0.8360393181092463, 0.831355743128487]}
-
 factor = 6
 epsilons = [0.1, 0.3, 0.5, 0.7, 1, 1.5, 2, 3]
-# epsilons = [0.1, 1, 3]
-
 pp_maes= {}
 pp_rmses= {}
-
-
-# pp_maes = {0.05: [1.0343426768850348, 0.9981363041000627, 0.9304161729877658, 0.9390005221328417, 0.8880326292570327, 0.8684418673344722, 0.8764336910962671, 0.8943007438802791], 0.1: [0.9335891299364243, 0.9144739946568736, 0.9044617751341846, 0.8905701890400569, 0.8991205977117104, 0.8683955520262264, 0.8647490744000171, 0.8802891606119667], 0.2: [0.8769670812123349, 0.8628677354847418, 0.855686912381846, 0.8564662402626394, 0.8417489939881951, 0.8322869290055558, 0.8347335898719205, 0.8338880785617117], 0.3: [0.8665241470846845, 0.8592761304245915, 0.8501072343181504, 0.8436329207910127, 0.833684413856357, 0.8364421727335699, 0.8295378085616564, 0.8315282417762083]}
-# pp_rmses = {0.05: [1.2924497987147165, 1.2442459533248453, 1.1679286044925217, 1.1666805469836148, 1.1269224631684476, 1.0876147221949068, 1.0895749300089559, 1.1150608358859542], 0.1: [1.1612747191894428, 1.146592688710529, 1.1351081491511104, 1.1052714201738794, 1.1133615653955944, 1.0865486152596686, 1.0751598740057953, 1.0998903461743554], 0.2: [1.103355119002497, 1.0835674401100948, 1.0736672637177043, 1.0760634637767554, 1.0593701374309998, 1.0483370717873517, 1.0479850690832073, 1.0495964449463013], 0.3: [1.0858563537017023, 1.0805781138550352, 1.0722101079309923, 1.062378332923582, 1.050713703116341, 1.0537901088222805, 1.0458658239066934, 1.0490164840757008]}
-#
 start_pp = time.time()
-
 for percentage in user_overlap_percentages:
     source, target, overlapping_user_ids, overlapping_target, overlapping_source = preprocess(percentage)
     pp_maes[percentage] = []
     pp_rmses[percentage] = []
     for epsilon in epsilons:
-
-        print("privacy preserving version")
+        # print("privacy preserving version")
         sensitivity = 4
         half_rating_sensitivity = 2
 
@@ -276,10 +244,8 @@ for percentage in user_overlap_percentages:
         target_svd_1.fit(X=target_1, X_val=target_1)
         target_svd_2.fit(X=target_2, X_val=target_2)
 
-
         svd_target_pp = SVD(lr=0.001, reg=0.01, n_epochs=1000, n_factors=factor*2, early_stopping=True,
                             shuffle=False, min_rating=1, max_rating=5)
-
         svd_target_pp.bi_ = target_svd_1.bi_ + target_svd_2.bi_
         svd_target_pp.bu_ = target_svd_1.bu_ + target_svd_2.bu_
         svd_target_pp.user_mapping_ = target_svd_1.user_mapping_
@@ -288,21 +254,15 @@ for percentage in user_overlap_percentages:
         svd_target_pp.qi_ = np.concatenate((target_svd_1.qi_, target_svd_2.qi_), axis=1)
         svd_target_pp.global_mean_ = target_svd_1.global_mean_ + target_svd_2.global_mean_
 
-
         # print("PP trainings done, pp similarity calculation starting")
-
         intra_domain_similarity_pp = intra_domain_similarity_calculation(svd_source_pp, overlapping_user_ids)
         inter_domain_similarity_pp = inter_domain_similarity_calculation(svd_source_pp, svd_target_pp, overlapping_user_ids)
-
         similarity_pre_calculation_pp = similarity_per_new_user(inter_domain_similarity_pp, intra_domain_similarity_pp, overlapping_user_ids)
-
         source_averages = (source.groupby("u_id").mean("rating")).drop(labels="i_id", axis = 1).to_dict()['rating']
         target_averages = (target.groupby("u_id").mean("rating")).drop(labels="i_id", axis = 1).to_dict()['rating']
-
         # print("PP prediction starting")
 
         start = time.time()
-
         results = predict(overlapping_target, similarity_pre_calculation_pp, overlapping_user_ids, target, svd_target_pp, target_averages, source_averages)
         end = time.time()
         print(f'Took {end - start:.1f} sec for test set size {overlapping_target.shape[0]}')
@@ -313,12 +273,12 @@ for percentage in user_overlap_percentages:
 end_pp = time.time()
 print(f'All pp one took {end_pp - start_pp:.1f} sec')
 
-handle = open('cdrs_mae.pickle', 'wb')
+handle = open('pickles/cdrs_mae.pickle', 'wb')
 pickle.dump(maes, handle, protocol=pickle.HIGHEST_PROTOCOL)
 pickle.dump(pp_maes, handle, protocol=pickle.HIGHEST_PROTOCOL)
 handle.close()
 
-handle = open('cdrs_rmse.pickle', 'wb')
+handle = open('pickles/cdrs_rmse.pickle', 'wb')
 pickle.dump(rmses, handle, protocol=pickle.HIGHEST_PROTOCOL)
 pickle.dump(pp_rmses, handle, protocol=pickle.HIGHEST_PROTOCOL)
 handle.close()

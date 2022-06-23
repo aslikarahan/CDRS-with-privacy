@@ -127,7 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/predictions.pickle
+/pickles/predictions.pickle
 /results_mae.pickle
-/results_rmse.pickle
+/pickles/results_rmse.pickle
 /img/
+/pickles/
+*.pickle

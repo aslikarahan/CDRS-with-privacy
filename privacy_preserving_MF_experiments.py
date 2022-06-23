@@ -4,9 +4,7 @@ import time
 import numpy as np
 from funk_svd import SVD
 from funk_svd.dataset import fetch_ml_ratings
-from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
-
 from sklearn.model_selection import train_test_split
 
 df = fetch_ml_ratings(variant='100k')
@@ -62,9 +60,10 @@ print(f'Took {end - start:.1f} sec')
 
 # Base + noise (Laplacian)
 print("Base + noise (Laplacian)")
-start = time.time()
-for factors in latent_vector_sizes:
-    for epsilon in epsilons:
+# start = time.time()
+for epsilon in epsilons:
+    start = time.time()
+    for factors in latent_vector_sizes:
         noise = np.random.laplace(loc=0, scale=sensitivity / epsilon, size=train.shape[0])
         base = train.copy(deep=True)
         base.rating = base.rating + noise
@@ -78,14 +77,15 @@ for factors in latent_vector_sizes:
             results_base_noise_laplacian[epsilon] = []
         results_base_noise_laplacian[epsilon].append(mae2)
         predictions_base_noise_laplacian[(factors, epsilon)] = pred2
-end = time.time()
-print(f'Took {end - start:.1f} sec')
+    end = time.time()
+    print(f'Epsilon {epsilon} Took {end - start:.1f} sec')
 
 # Average of two parties
 print("Average of two parties")
-start = time.time()
-for factors in latent_vector_sizes:
-    for epsilon in epsilons:
+# start = time.time()
+for epsilon in epsilons:
+    start = time.time()
+    for factors in latent_vector_sizes:
         noise_1 = np.random.laplace(loc=0, scale=sensitivity / epsilon, size=train.shape[0])
         noise_2 = np.random.laplace(loc=0, scale=sensitivity / epsilon, size=train.shape[0])
         base_1 = train.copy(deep=True)
@@ -116,14 +116,15 @@ for factors in latent_vector_sizes:
             results_average_of_two_laplacian[epsilon] = []
         results_average_of_two_laplacian[epsilon].append(mae)
         predictions_average_of_two_laplacian[(factors, epsilon)] = pred
-end = time.time()
-print(f'Took {end - start:.1f} sec')
+    end = time.time()
+    print(f'Epsilon {epsilon} Took {end - start:.1f} sec')
 
 # Plus minus trick
 print("Plus minus trick")
-start = time.time()
-for factors in latent_vector_sizes:
-    for epsilon in epsilons:
+# start = time.time()
+for epsilon in epsilons:
+    start = time.time()
+    for factors in latent_vector_sizes:
         noise_1 = np.abs(np.random.laplace(loc=0, scale=sensitivity / epsilon, size=train.shape[0]))
         noise_2 = np.abs(np.random.laplace(loc=0, scale=sensitivity / epsilon, size=train.shape[0]))
         base_1 = train.copy(deep=True)
@@ -153,14 +154,15 @@ for factors in latent_vector_sizes:
             results_plus_minus_of_two_laplacian[epsilon] = []
         results_plus_minus_of_two_laplacian[epsilon].append(mae)
         predictions_plus_minus_of_two_laplacian[(factors, epsilon)] = pred
-end = time.time()
-print(f'Took {end - start:.1f} sec')
+    end = time.time()
+    print(f'Epsilon {epsilon} Took {end - start:.1f} sec')
 
 # additive shares with (noise, r-noise)
 print("additive shares with (noise, r-noise)")
 start = time.time()
-for factors in latent_vector_sizes:
-    for epsilon in epsilons:
+for epsilon in epsilons:
+    start = time.time()
+    for factors in latent_vector_sizes:
         noise = np.random.laplace(loc=0, scale=sensitivity / epsilon, size=train.shape[0])
         base_1 = train.copy(deep=True)
         base_1.rating = noise
@@ -188,14 +190,15 @@ for factors in latent_vector_sizes:
             results_additive_n_r_laplacian[epsilon] = []
         results_additive_n_r_laplacian[epsilon].append(mae)
         predictions_additive_n_r_laplacian[(factors, epsilon)] = pred
-end = time.time()
-print(f'Took {end - start:.1f} sec')
+    end = time.time()
+    print(f'Epsilon {epsilon} Took {end - start:.1f} sec')
 
 # additive shares with (r/2 + noise, r/2 - noise)
 print("additive shares with (r/2 + noise, r/2 - noise)")
-start = time.time()
-for factors in latent_vector_sizes:
-    for epsilon in epsilons:
+# start = time.time()
+for epsilon in epsilons:
+    start = time.time()
+    for factors in latent_vector_sizes:
         noise = np.abs(np.random.laplace(loc=0, scale=half_rating_sensitivity / epsilon, size=train.shape[0]))
         base_1 = train.copy(deep=True)
         base_1.rating = base_1.rating / 2 + noise
@@ -223,10 +226,10 @@ for factors in latent_vector_sizes:
             results_additive_n_2_laplacian[epsilon] = []
         results_additive_n_2_laplacian[epsilon].append(mae)
         predictions_additive_n_2_laplacian[(factors, epsilon)] = pred
-end = time.time()
-print(f'Took {end - start:.1f} sec')
+    end = time.time()
+    print(f'Epsilon {epsilon} Took {end - start:.1f} sec')
 
-handle = open('results_rmse.pickle', 'wb')
+handle = open('pickles/results_rmse.pickle', 'wb')
 pickle.dump(results_baseline, handle, protocol=pickle.HIGHEST_PROTOCOL)
 pickle.dump(results_base_noise_laplacian, handle, protocol=pickle.HIGHEST_PROTOCOL)
 pickle.dump(results_average_of_two_laplacian, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -235,7 +238,7 @@ pickle.dump(results_additive_n_r_laplacian, handle, protocol=pickle.HIGHEST_PROT
 pickle.dump(results_additive_n_2_laplacian, handle, protocol=pickle.HIGHEST_PROTOCOL)
 handle.close()
 
-handle = open('predictions.pickle', 'wb')
+handle = open('pickles/predictions.pickle', 'wb')
 pickle.dump(predictions_baseline, handle, protocol=pickle.HIGHEST_PROTOCOL)
 pickle.dump(predictions_base_noise_laplacian, handle, protocol=pickle.HIGHEST_PROTOCOL)
 pickle.dump(predictions_average_of_two_laplacian, handle, protocol=pickle.HIGHEST_PROTOCOL)
